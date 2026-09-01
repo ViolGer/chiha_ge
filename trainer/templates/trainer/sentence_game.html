@@ -1,0 +1,26 @@
+{% extends "trainer/base.html" %}
+{% load static %}
+{% block title %}Составь предложение — Тренажёр слов{% endblock %}
+{% block content %}
+<div id="gameArea">
+  <div class="game-header">
+    <span id="progress" class="game-progress"></span>
+    <span id="lessonScore" class="lesson-score-badge"></span>
+  </div>
+  <div class="card-panel">
+    <div id="promptBox" class="prompt-box ka-text"></div>
+    <div id="answerArea" class="answer-area ka-text"></div>
+    <div id="wordBank" class="word-bank ka-text"></div>
+    <div class="actions-row">
+      <button id="checkBtn" class="check-btn" disabled>Проверить</button>
+      <button id="nextBtn" class="next-btn" style="display:none">Дальше →</button>
+    </div>
+    <div id="feedback" class="feedback-line ka-text"></div>
+  </div>
+</div>
+<div id="summary" style="display:none"></div>
+<div id="hintBubble" class="hint-bubble" style="display:none"></div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'trainer/js/sentence.js' %}"></script>
+{% endblock %}

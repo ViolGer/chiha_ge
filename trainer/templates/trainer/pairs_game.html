@@ -1,0 +1,22 @@
+{% extends "trainer/base.html" %}
+{% load static %}
+{% block title %}Пары слов — Тренажёр слов{% endblock %}
+{% block content %}
+<div id="gameArea">
+  <div class="game-header">
+    <span id="pairScore" class="lesson-score-badge">Пар собрано: 0</span>
+    <span id="timer" class="timer-badge">2:00</span>
+  </div>
+  <div class="card-panel">
+    <p style="text-align:center;color:var(--ink-soft);margin-top:0">Соедини грузинское слово с русским переводом. За 2 минуты — как можно больше пар.</p>
+    <div class="pairs-grid">
+      <div id="leftCol" class="pairs-col ka-text"></div>
+      <div id="rightCol" class="pairs-col"></div>
+    </div>
+  </div>
+</div>
+<div id="summary" style="display:none"></div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'trainer/js/pairs.js' %}"></script>
+{% endblock %}

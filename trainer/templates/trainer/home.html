@@ -1,0 +1,64 @@
+{% extends "trainer/base.html" %}
+{% block content %}
+<header class="hero">
+  <h1>Тренажёр слов 🇬🇪</h1>
+  <p class="hero-sub">База из {{ word_count }} грузинских слов и {{ sentence_count }} учебных фраз.
+    Выбери игру и потренируйся.</p>
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num">{{ total_score }}</div>
+      <div class="stat-label">очков всего{% if total_max %} из {{ total_max }}{% endif %}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">{{ games_played }}</div>
+      <div class="stat-label">сыграно уроков</div>
+    </div>
+  </div>
+</header>
+
+<div class="game-grid">
+  <a class="game-card" href="{% url 'sentence_game' %}">
+    <div class="game-emoji">🧩</div>
+    <h2>Составь предложение</h2>
+    <p>Собери фразу из слов — с русского на грузинский и обратно. Нажми на слово — увидишь подсказку.</p>
+  </a>
+  <a class="game-card" href="{% url 'pairs_game' %}">
+    <div class="game-emoji">🔗</div>
+    <h2>Пары слов</h2>
+    <p>2 минуты на то, чтобы соединить как можно больше пар: грузинское слово ↔ русский перевод.</p>
+  </a>
+  <a class="game-card" href="{% url 'flashcard_game' %}">
+    <div class="game-emoji">🃏</div>
+    <h2>Карточки</h2>
+    <p>Эмодзи показывает слово — выбери правильный перевод из четырёх вариантов.</p>
+  </a>
+  <a class="game-card" href="{% url 'letters_game' %}">
+    <div class="game-emoji">🔤</div>
+    <h2>Буквы</h2>
+    <p>Грузинская буква — выбери, как она звучит, из четырёх вариантов транскрипции.</p>
+  </a>
+</div>
+
+{% if per_game and games_played %}
+<section class="stats-detail">
+  <h2>Статистика по играм</h2>
+  <div class="stats-table-wrap">
+    <table class="stats-table">
+      <thead><tr><th>Игра</th><th>Уроков</th><th>Очки всего</th><th>Лучший результат</th></tr></thead>
+      <tbody>
+      {% for g in per_game %}
+        {% if g.played %}
+        <tr>
+          <td>{{ g.label }}</td>
+          <td>{{ g.played }}</td>
+          <td>{{ g.total_score }}{% if g.total_max %} / {{ g.total_max }}{% endif %}</td>
+          <td>{{ g.best_score }}{% if g.best_max %} / {{ g.best_max }}{% endif %}</td>
+        </tr>
+        {% endif %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

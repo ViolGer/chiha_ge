@@ -1,0 +1,20 @@
+{% extends "trainer/base.html" %}
+{% load static %}
+{% block title %}Буквы — Тренажёр слов{% endblock %}
+{% block content %}
+<div id="gameArea">
+  <div class="game-header">
+    <span id="progress" class="game-progress"></span>
+    <span id="lessonScore" class="lesson-score-badge"></span>
+  </div>
+  <div class="card-panel">
+    <div id="flashLetter" class="flash-letter"></div>
+    <div id="optionsGrid" class="options-grid"></div>
+  </div>
+</div>
+<div id="summary" style="display:none"></div>
+{% endblock %}
+{% block extra_scripts %}
+<script>window.LETTERS_TOTAL = {{ letters_total }};</script>
+<script src="{% static 'trainer/js/letters.js' %}"></script>
+{% endblock %}

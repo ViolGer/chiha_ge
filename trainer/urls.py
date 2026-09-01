@@ -1,0 +1,18 @@
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path("", views.home, name="home"),
+    path("igra/predlozheniya/", views.sentence_game, name="sentence_game"),
+    path("igra/pary/", views.pairs_game, name="pairs_game"),
+    path("igra/kartochki/", views.flashcard_game, name="flashcard_game"),
+    path("igra/bukvy/", views.letters_game, name="letters_game"),
+    # JSON API used by the game front-ends
+    path("api/predlozhenie/", views.api_sentence, name="api_sentence"),
+    path("api/podskazka/", views.api_word_hint, name="api_word_hint"),
+    path("api/pary/", views.api_pairs, name="api_pairs"),
+    path("api/kartochka/", views.api_flashcard, name="api_flashcard"),
+    path("api/bukva/", views.api_letter, name="api_letter"),
+    path("api/ochki/", views.api_submit_score, name="api_submit_score"),
+]
