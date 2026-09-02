@@ -11,8 +11,8 @@
     venv\\Scripts\\python.exe -m pip install edge-tts
     venv\\Scripts\\python.exe generate_audio.py
 
-По умолчанию озвучивается всё грузинское со страницы курса — это ~130
-фрагментов, минута-две работы. Дополнительно:
+По умолчанию озвучивается всё грузинское со страницы курса и все фразы
+разговорника — около 380 фрагментов, несколько минут. Дополнительно:
 
     python generate_audio.py --words       # + все слова словаря (~1900, дольше)
     python generate_audio.py --sentences   # + 160 учебных фраз
@@ -53,6 +53,16 @@ def from_course_page():
     # Отдельные буквы тоже озвучиваются (в разделе про алфавит
     # каждая буква — своя кнопка), поэтому по длине не отсеиваем.
     return [t for t in found if t]
+
+
+def from_phrases():
+    """Разговорник: все фразы из data/phrases.json."""
+    path = DATA_DIR / "phrases.json"
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8") as f:
+        sections = json.load(f)
+    return [normalize(it["ka"]) for s in sections for it in s.get("items", [])]
 
 
 def from_words():
@@ -108,7 +118,7 @@ async def main():
         print(r"    venv\Scripts\python.exe -m pip install edge-tts")
         return 1
 
-    texts = list(from_course_page())
+    texts = list(from_course_page()) + from_phrases()
     if args.words or args.all:
         texts += from_words()
     if args.sentences or args.all:

@@ -1,0 +1,104 @@
+{% extends "trainer/base.html" %}
+{% load static %}
+{% block title %}Словарь и фразы — Грузинский с нуля{% endblock %}
+{% block extra_head %}
+<style>
+  /* Стили только для этой страницы — общий trainer.css не трогаем */
+  .dict-head { text-align: center; margin-bottom: 22px; }
+  .dict-head h1 { font-size: 30px; margin-bottom: 6px; }
+  .dict-head p { color: var(--ink-soft); margin: 0; }
+
+  .tabs { display: flex; gap: 6px; justify-content: center; margin: 18px 0 16px; }
+  .tab {
+    background: none; border: 1.5px solid var(--line); border-radius: 999px;
+    padding: 8px 18px; font: inherit; font-size: 14px; font-weight: 700;
+    color: var(--ink-soft); cursor: pointer;
+  }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .search {
+    flex: 1 1 240px; min-width: 0;
+    background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    padding: 11px 14px; font: inherit; font-size: 15px; color: var(--ink);
+  }
+  .search:focus, .theme-select:focus, .tab:focus-visible, .say-btn:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .theme-select {
+    background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    padding: 11px 12px; font: inherit; font-size: 14px; color: var(--ink); max-width: 100%;
+  }
+  .counter { color: var(--ink-soft); font-size: 13px; margin: 10px 2px 14px; }
+
+  .entries { display: flex; flex-direction: column; gap: 1px; background: var(--line);
+             border: 1px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
+  .entry {
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: center;
+    background: var(--surface); padding: 12px 16px;
+  }
+  @media (max-width: 620px) {
+    .entry { grid-template-columns: 1fr auto; }
+    .entry .ru-side { grid-column: 1 / 2; }
+  }
+  .entry .ka-side { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .entry .ka-word { font-family: 'Noto Sans Georgian', 'PT Sans', sans-serif; font-size: 18px; font-weight: 700; }
+  .entry .ka-tr { font-size: 13px; color: var(--ink-soft); }
+  .entry .ru-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .entry .ru-word { font-size: 15px; }
+  .entry .meta { font-size: 12px; color: var(--ink-soft); }
+  .entry .meta .emoji { margin-right: 4px; }
+  .say-btn {
+    background: var(--surface-2); border: none; border-radius: 50%;
+    width: 36px; height: 36px; font-size: 15px; cursor: pointer; color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .say-btn:hover { background: var(--accent); color: var(--accent-ink); }
+  .say-btn.playing { opacity: .5; }
+
+  .more-row { display: flex; justify-content: center; margin-top: 18px; }
+  .more-btn {
+    background: none; border: 1.5px solid var(--line); border-radius: 999px;
+    padding: 10px 22px; font: inherit; font-size: 14px; font-weight: 700;
+    color: var(--ink); cursor: pointer;
+  }
+  .more-btn:hover { border-color: var(--accent); }
+  .empty { text-align: center; color: var(--ink-soft); padding: 40px 20px; }
+
+  .phrase-section { margin-bottom: 26px; }
+  .phrase-section h2 { font-size: 19px; margin-bottom: 2px; }
+  .phrase-section .note { color: var(--ink-soft); font-size: 14px; margin: 0 0 10px; }
+  .src-tag { font-size: 11px; color: var(--ink-soft); border: 1px solid var(--line);
+             border-radius: 999px; padding: 1px 7px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dict-head">
+  <h1>Словарь и фразы</h1>
+  <p>{{ word_count }} слов с транскрипцией и переводом, {{ phrase_count }} готовых фраз по ситуациям.
+    Нажми на 🔊, чтобы послушать.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <button class="tab" id="tabWords" role="tab" aria-selected="true" aria-controls="paneWords">Слова</button>
+  <button class="tab" id="tabPhrases" role="tab" aria-selected="false" aria-controls="panePhrases">Фразы</button>
+</div>
+
+<div class="controls">
+  <input id="search" class="search" type="search" placeholder="Поиск по-русски, по-грузински или по транскрипции" autocomplete="off">
+  <select id="themeSelect" class="theme-select" aria-label="Тема"><option value="">Все темы</option></select>
+</div>
+<div id="counter" class="counter">Загружаю…</div>
+
+<div id="paneWords" role="tabpanel" aria-labelledby="tabWords">
+  <div id="wordList" class="entries"></div>
+  <div id="moreRow" class="more-row" style="display:none">
+    <button id="moreBtn" class="more-btn">Показать ещё</button>
+  </div>
+</div>
+
+<div id="panePhrases" role="tabpanel" aria-labelledby="tabPhrases" hidden></div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'trainer/js/dictionary.js' %}"></script>
+{% endblock %}

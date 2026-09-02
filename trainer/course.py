@@ -27,6 +27,9 @@ COURSE_FILE = Path(__file__).resolve().parent / "site" / "georgian_trail.html"
 # Адрес главной страницы тренажёра (см. trainer/urls.py)
 TRAINER_URL = "/trener/"
 
+# Словарь со всеми словами и разговорником
+DICTIONARY_URL = "/slovar/"
+
 # Ссылка на Telegram-бота. Впиши сюда адрес вида "https://t.me/имя_бота" —
 # и на курсе появится кнопка «Бот в Telegram» (в меню и в подвале страницы).
 # Пустая строка — кнопки просто не будет.
@@ -54,7 +57,8 @@ DOC_BOTTOM = """
 # --- 1. ссылка на тренажёр (и на бота) в верхнем меню ----------------------
 NAV_ANCHOR = '<div class="topnav-links" id="topnavLinks">'
 NAV_PATCH = NAV_ANCHOR + (
-    '\n      <a class="topnav-trainer" href="%s">\U0001F3AE Тренажёр слов</a>' % TRAINER_URL
+    '\n      <a class="topnav-trainer" href="%s">\U0001F3AE Тренажёр слов</a>'
+    '\n      <a class="topnav-dict" href="%s">\U0001F4D6 Словарь</a>' % (TRAINER_URL, DICTIONARY_URL)
 ) + (
     '\n      <a class="topnav-bot" href="%s" target="_blank" rel="noopener">'
     '\U0001F916 Бот в Telegram</a>' % BOT_URL if BOT_URL else ""
@@ -74,6 +78,8 @@ BOTTOM_STYLES = """
     background: var(--accent); color: var(--accent-ink);
   }
   .topnav-links a.topnav-bot { color: var(--accent-3, var(--accent)); font-weight: 700; }
+  .topnav-links a.topnav-dict { color: var(--accent); border: 1.5px solid var(--line); padding: 5px 12px; }
+  .topnav-links a.topnav-dict:hover { border-color: var(--accent); background: var(--surface-2); }
 
   .trainer-fab {
     position: fixed; z-index: 998;

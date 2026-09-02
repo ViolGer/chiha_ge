@@ -1,5 +1,6 @@
 import json
 import random
+from pathlib import Path
 
 from django.db.models import Sum
 from django.http import FileResponse, Http404, JsonResponse, HttpResponseBadRequest
@@ -53,6 +54,16 @@ def home(request):
         "word_count": Word.objects.count(), "sentence_count": Sentence.objects.count(),
         "total_score": totals["total_score"] or 0, "total_max": totals["total_max"] or 0,
         "games_played": results.count(), "per_game": per_game})
+
+
+def dictionary(request):
+    """Словарь и разговорник. Данные подгружаются отдельными запросами —
+    страница открывается сразу, а поиск дальше работает без обращений
+    к серверу."""
+    return render(request, "trainer/dictionary.html", {
+        "word_count": Word.objects.count(),
+        "phrase_count": _phrase_count(),
+    })
 
 
 def sentence_game(request):
@@ -195,3 +206,48 @@ def audio(request):
     if not path.exists():
         raise Http404("озвучка не сгенерирована")
     return FileResponse(open(path, "rb"), content_type="audio/mpeg")
+
+
+# ---------------------------------------------------------------------------
+# Словарь и разговорник
+# ---------------------------------------------------------------------------
+
+PHRASES_FILE = Path(__file__).resolve().parent / "data" / "phrases.json"
+
+_phrases_cache = None
+_words_cache = None
+
+
+def _load_phrases():
+    """Разговорник читается из файла один раз за время работы сервера."""
+    global _phrases_cache
+    if _phrases_cache is None:
+        try:
+            with open(PHRASES_FILE, encoding="utf-8") as f:
+                _phrases_cache = json.load(f)
+        except (OSError, ValueError):
+            _phrases_cache = []
+    return _phrases_cache
+
+
+def _phrase_count():
+    return sum(len(section.get("items", [])) for section in _load_phrases())
+
+
+@require_GET
+def api_dictionary(request):
+    """Весь словарь одним ответом: дальше поиск и фильтры работают в браузере,
+    без запросов на каждую букву."""
+    global _words_cache
+    if _words_cache is None:
+        _words_cache = [
+            {"ka": w.ka, "tr": w.transcription, "ru": w.ru, "pos": w.pos,
+             "theme": w.theme, "emoji": w.emoji}
+            for w in Word.objects.all().order_by("ka")
+        ]
+    return JsonResponse({"words": _words_cache, "count": len(_words_cache)})
+
+
+@require_GET
+def api_phrases(request):
+    return JsonResponse({"sections": _load_phrases(), "count": _phrase_count()})

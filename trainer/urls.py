@@ -12,6 +12,10 @@ urlpatterns = [
     path("igra/pary/", views.pairs_game, name="pairs_game"),
     path("igra/kartochki/", views.flashcard_game, name="flashcard_game"),
     path("igra/bukvy/", views.letters_game, name="letters_game"),
+    # Словарь и разговорник
+    path("slovar/", views.dictionary, name="dictionary"),
+    path("api/slovar/", views.api_dictionary, name="api_dictionary"),
+    path("api/frazy/", views.api_phrases, name="api_phrases"),
     # Озвучка грузинских слов (заранее сгенерированные файлы)
     path("ozvuchka/", views.audio, name="audio"),
     # JSON API used by the game front-ends
