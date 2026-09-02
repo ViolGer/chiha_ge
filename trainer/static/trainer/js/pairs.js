@@ -51,7 +51,7 @@
     solvedIds = new Set();
     const rightShuffled = shuffle(pairs);
     pairs.forEach((p) => {
-      const tile = makeTile(p.ka, p.id, 'left');
+      const tile = makeTile(p.ka, p.id, 'left', p.transcription);
       leftCol.appendChild(tile);
     });
     rightShuffled.forEach((p) => {
@@ -60,10 +60,20 @@
     });
   }
 
-  function makeTile(text, id, side) {
+  function makeTile(text, id, side, transcription) {
     const div = document.createElement('div');
     div.className = 'pair-tile';
-    div.textContent = text;
+    const main = document.createElement('span');
+    main.className = 'tile-main';
+    main.textContent = text;
+    div.appendChild(main);
+    // Под грузинским словом — транскрипция, чтобы было понятно, как читается.
+    if (transcription) {
+      const sub = document.createElement('span');
+      sub.className = 'tile-tr';
+      sub.textContent = transcription;
+      div.appendChild(sub);
+    }
     div.dataset.id = id;
     div.dataset.side = side;
     div.addEventListener('click', () => onTileClick(div, id, side));
@@ -134,7 +144,7 @@
             <p>Пар собрано за 2 минуты. Всего накоплено очков: <b>${data.total_score}</b></p>
             <div class="actions-row" style="justify-content:center">
               <button class="check-btn" onclick="location.reload()">Играть ещё раз</button>
-              <a class="next-btn" style="text-decoration:none;display:inline-block" href="/">На главную</a>
+              <a class="next-btn" style="text-decoration:none;display:inline-block" href="/trener/">К играм</a>
             </div>
           </div>`;
       });

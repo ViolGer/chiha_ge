@@ -12,12 +12,19 @@ class Command(BaseCommand):
     help = "Load the Georgian vocabulary, emoji tags and practice sentences into the database."
 
     def handle(self, *args, **options):
-        self._load_words()
+        self._load_words("words.json")
+        # Базовые слова, которых не оказалось в основном наборе: приветствия,
+        # части суток, страны, «мужчина/женщина» и т.п.
+        self._load_words("words_extra.json", label="Extra words")
         self._load_emoji()
         self._load_sentences()
 
-    def _load_words(self):
-        with open(DATA_DIR / "words.json", encoding="utf-8") as f:
+    def _load_words(self, filename, label="Words"):
+        path = DATA_DIR / filename
+        if not path.exists():
+            self.stdout.write(self.style.WARNING(f"{filename} не найден — пропускаю"))
+            return
+        with open(path, encoding="utf-8") as f:
             rows = json.load(f)
         created = 0
         for r in rows:
@@ -31,15 +38,14 @@ class Command(BaseCommand):
                 },
             )
             created += was_created
-        self.stdout.write(self.style.SUCCESS(f"Words: {created} created, {len(rows)} total in file"))
+        self.stdout.write(self.style.SUCCESS(f"{label}: {created} created, {len(rows)} total in file"))
 
     def _load_emoji(self):
         with open(DATA_DIR / "emoji_words.json", encoding="utf-8") as f:
             rows = json.load(f)
         updated = 0
         for r in rows:
-            n = Word.objects.filter(ka=r["ka"]).update(emoji=r["emoji"])
-            updated += n
+            updated += Word.objects.filter(ka=r["ka"]).update(emoji=r["emoji"])
         self.stdout.write(self.style.SUCCESS(f"Emoji tags applied: {updated}"))
 
     def _load_sentences(self):

@@ -24,6 +24,7 @@
   function renderPrompt() {
     promptBox.innerHTML = '';
     promptBox.classList.toggle('static', current.prompt_lang !== 'ka');
+    const line = document.createElement('div');
     current.prompt_words.forEach((w) => {
       const span = document.createElement('span');
       span.className = 'word-tok';
@@ -31,8 +32,34 @@
       if (current.prompt_lang === 'ka') {
         span.addEventListener('click', (e) => showHint(e, w));
       }
-      promptBox.appendChild(span);
+      line.appendChild(span);
     });
+    promptBox.appendChild(line);
+    // Транскрипция всей фразы — только когда задание на грузинском:
+    // в обратную сторону она бы выдала порядок слов в ответе.
+    if (current.prompt_lang === 'ka' && current.transcription) {
+      const tr = document.createElement('div');
+      tr.className = 'prompt-tr';
+      tr.textContent = current.transcription;
+      promptBox.appendChild(tr);
+    }
+  }
+
+  // Фишка со словом: сверху грузинское слово, под ним транскрипция.
+  function makeChip(word, tr, cls) {
+    const btn = document.createElement('button');
+    btn.className = cls;
+    const main = document.createElement('span');
+    main.className = 'chip-main';
+    main.textContent = word;
+    btn.appendChild(main);
+    if (tr) {
+      const sub = document.createElement('span');
+      sub.className = 'chip-tr';
+      sub.textContent = tr;
+      btn.appendChild(sub);
+    }
+    return btn;
   }
 
   function showHint(e, word) {
@@ -42,7 +69,10 @@
         hintBubble.style.display = 'block';
         hintBubble.style.left = Math.min(e.clientX, window.innerWidth - 230) + 'px';
         hintBubble.style.top = (e.clientY + 16) + 'px';
-        hintBubble.textContent = data.found ? `${word} — ${data.ru}` : `${word} — перевод не найден в базе`;
+        const transcriptionPart = data.transcription ? ` [${data.transcription}]` : '';
+        hintBubble.textContent = data.found
+          ? `${word}${transcriptionPart} — ${data.ru}`
+          : `${word}${transcriptionPart} — перевод не найден в базе`;
         clearTimeout(showHint._t);
         showHint._t = setTimeout(() => (hintBubble.style.display = 'none'), 2500);
       });
@@ -51,9 +81,7 @@
   function renderBank() {
     wordBank.innerHTML = '';
     bankState.forEach((item, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'word-chip';
-      btn.textContent = item.word;
+      const btn = makeChip(item.word, item.tr, 'word-chip');
       btn.disabled = item.used;
       btn.style.visibility = item.used ? 'hidden' : 'visible';
       btn.addEventListener('click', () => placeWord(i));
@@ -64,9 +92,7 @@
   function renderAnswer() {
     answerArea.innerHTML = '';
     placed.forEach((item, pIdx) => {
-      const btn = document.createElement('button');
-      btn.className = 'word-chip placed';
-      btn.textContent = item.word;
+      const btn = makeChip(item.word, item.tr, 'word-chip placed');
       btn.addEventListener('click', () => removeWord(pIdx));
       answerArea.appendChild(btn);
     });
@@ -76,7 +102,7 @@
     const item = bankState[bankIdx];
     if (item.used) return;
     item.used = true;
-    placed.push({ word: item.word, bankIndex: bankIdx });
+    placed.push({ word: item.word, tr: item.tr, bankIndex: bankIdx });
     renderBank();
     renderAnswer();
     checkBtn.disabled = placed.length !== current.answer_words.length;
@@ -102,7 +128,11 @@
       .then((data) => {
         current = data;
         placed = [];
-        bankState = data.shuffled_words.map((w) => ({ word: w, used: false }));
+        bankState = data.shuffled_words.map((w, i) => ({
+          word: w,
+          tr: (data.shuffled_tr && data.shuffled_tr[i]) || '',
+          used: false,
+        }));
         renderPrompt();
         renderBank();
         renderAnswer();
@@ -154,7 +184,7 @@
             <p>Очков за урок. Всего накоплено: <b>${data.total_score}</b></p>
             <div class="actions-row" style="justify-content:center">
               <button class="check-btn" onclick="location.reload()">Играть ещё раз</button>
-              <a class="next-btn" style="text-decoration:none;display:inline-block" href="/">На главную</a>
+              <a class="next-btn" style="text-decoration:none;display:inline-block" href="/trener/">К играм</a>
             </div>
           </div>`;
       });

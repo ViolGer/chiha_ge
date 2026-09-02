@@ -1,6 +1,19 @@
 {% extends "trainer/base.html" %}
 {% load static %}
 {% block title %}Карточки — Тренажёр слов{% endblock %}
+{% block extra_head %}
+<style>
+  /* Стили только для этой страницы — общий trainer.css не трогаем */
+  .flash-emoji { margin-bottom: 8px; }
+  .flash-word {
+    text-align: center; font-family: 'Baloo 2', system-ui, sans-serif;
+    font-size: 26px; font-weight: 700; color: var(--ink); margin-bottom: 2px;
+  }
+  .flash-task { text-align: center; color: var(--ink-soft); font-size: 14px; margin: 0 0 18px; }
+  .flash-error { grid-column: 1 / -1; text-align: center; color: var(--bad); font-size: 14px; }
+  .flash-error code { background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+</style>
+{% endblock %}
 {% block content %}
 <div id="gameArea">
   <div class="game-header">
@@ -9,7 +22,10 @@
   </div>
   <div class="card-panel">
     <div id="flashEmoji" class="flash-emoji"></div>
-    <div id="optionsGrid" class="options-grid"></div>
+    <div id="flashWord" class="flash-word"></div>
+    <p class="flash-task">Выбери грузинское слово:</p>
+    <div id="optionsGrid" class="options-grid ka-text"></div>
+    <div id="feedback" class="feedback-line"></div>
   </div>
 </div>
 <div id="summary" style="display:none"></div>

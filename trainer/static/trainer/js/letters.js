@@ -75,7 +75,7 @@
             <p>Правильных ответов. Всего накоплено очков: <b>${data.total_score}</b></p>
             <div class="actions-row" style="justify-content:center">
               <button class="check-btn" onclick="location.reload()">Играть ещё раз</button>
-              <a class="next-btn" style="text-decoration:none;display:inline-block" href="/">На главную</a>
+              <a class="next-btn" style="text-decoration:none;display:inline-block" href="/trener/">К играм</a>
             </div>
           </div>`;
       });
