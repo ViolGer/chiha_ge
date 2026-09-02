@@ -22,6 +22,11 @@ CSRF_TRUSTED_ORIGINS = [
     o for o in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o
 ]
 
+# На Render сайт работает за прокси, который сам держит https. Без этой
+# строки Django считает соединение небезопасным и отклоняет POST-формы
+# (вход, регистрация) с ошибкой про Origin.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Application definition
 
@@ -67,14 +72,28 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
-# Uses SQLite by default (a single file, zero setup) — good enough for this
-# app's traffic. Works out of the box on Render/Railway/PythonAnywhere too.
+#
+# Локально — SQLite, ничего настраивать не нужно.
+#
+# На сервере обязателен Postgres: на бесплатном тарифе Render файловая
+# система пересоздаётся при каждом деплое и перезапуске, и файл SQLite
+# вместе с ней — то есть все аккаунты и очки исчезали бы. Render отдаёт
+# адрес базы в переменной DATABASE_URL; как только она задана, проект
+# сам переключается на неё.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+if DATABASE_URL:
+    import dj_database_url
+
+    DATABASES["default"] = dj_database_url.parse(
+        DATABASE_URL, conn_max_age=600, conn_health_checks=True
+    )
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -83,6 +102,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# Личный кабинет
+LOGIN_URL = "/vhod/"
+LOGIN_REDIRECT_URL = "/kabinet/"
+LOGOUT_REDIRECT_URL = "/"
 
 
 LANGUAGE_CODE = "ru"

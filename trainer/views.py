@@ -34,12 +34,18 @@ def _ensure_session(request):
     return request.session.session_key
 
 
+def _own_results(request):
+    """Результаты этого человека: по аккаунту, если вошёл, иначе по сессии."""
+    if request.user.is_authenticated:
+        return GameResult.objects.filter(user=request.user)
+    return GameResult.objects.filter(session_key=_ensure_session(request))
+
+
 GAME_LABELS = dict(GameResult.GAME_CHOICES)
 
 
 def home(request):
-    session_key = _ensure_session(request)
-    results = GameResult.objects.filter(session_key=session_key)
+    results = _own_results(request)
     totals = results.aggregate(total_score=Sum("score"), total_max=Sum("max_score"))
     per_game = []
     for code, label in GameResult.GAME_CHOICES:
@@ -169,6 +175,7 @@ def api_word_hint(request):
 @require_POST
 def api_submit_score(request):
     session_key = _ensure_session(request)
+    user = request.user if request.user.is_authenticated else None
     try:
         data = json.loads(request.body.decode("utf-8"))
         game_type = data["game_type"]
@@ -178,9 +185,9 @@ def api_submit_score(request):
         return HttpResponseBadRequest("bad payload")
     if game_type not in GAME_LABELS:
         return HttpResponseBadRequest("unknown game_type")
-    GameResult.objects.create(session_key=session_key, game_type=game_type,
+    GameResult.objects.create(user=user, session_key=session_key, game_type=game_type,
                               score=score, max_score=max_score)
-    totals = GameResult.objects.filter(session_key=session_key).aggregate(
+    totals = _own_results(request).aggregate(
         total_score=Sum("score"), total_max=Sum("max_score"))
     return JsonResponse({"ok": True, "lesson_score": score, "lesson_max": max_score,
                          "total_score": totals["total_score"] or 0,

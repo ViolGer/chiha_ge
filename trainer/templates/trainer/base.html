@@ -10,9 +10,51 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐐</text></svg>">
 <link rel="stylesheet" href="{% static 'trainer/css/trainer.css' %}">
 <style>
-  /* ссылка на курс — выделяем акцентом, чтобы было видно, что это выход из тренажёра */
+  /* Общие мелочи меню и страниц кабинета — trainer.css не трогаем */
   .topnav-links a.topnav-course { color: var(--accent); font-weight: 700; }
+  .topnav-links a.topnav-account { margin-left: auto; }
   .site-footer a { color: var(--accent); }
+
+  .auth-card {
+    max-width: 420px; margin: 10px auto 0;
+    background: var(--surface); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow); padding: 30px 28px;
+  }
+  .auth-card h1 { font-size: 26px; }
+  .auth-lead { color: var(--ink-soft); font-size: 14px; margin: 0 0 20px; }
+  .auth-form { display: flex; flex-direction: column; gap: 16px; }
+  .form-row { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 14px; font-weight: 700; }
+  .form-input {
+    background: var(--bg); border: 1.5px solid var(--line); border-radius: var(--radius-sm);
+    padding: 11px 13px; font: inherit; font-size: 15px; color: var(--ink); width: 100%;
+  }
+  .form-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .form-help { font-size: 12.5px; color: var(--ink-soft); }
+  .form-error { font-size: 13px; color: var(--bad); }
+  .auth-alt { margin: 18px 0 0; font-size: 14px; color: var(--ink-soft); }
+  .auth-alt a { color: var(--accent); }
+
+  .profile-head { text-align: center; margin-bottom: 6px; }
+  .profile-head h1 { font-size: 30px; margin-bottom: 2px; }
+  .profile-sub { color: var(--ink-soft); font-size: 14px; margin: 0; }
+  .profile-adopted {
+    margin: 14px auto 0; max-width: 460px; font-size: 14px;
+    background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px 14px;
+  }
+  .profile-note { color: var(--ink-soft); font-size: 13px; margin-top: 10px; }
+  .profile-empty { text-align: center; margin-top: 34px; color: var(--ink-soft); }
+  .profile-empty p { margin-bottom: 16px; }
+  .profile-actions {
+    display: flex; gap: 18px; align-items: center; justify-content: center;
+    flex-wrap: wrap; margin-top: 40px; font-size: 14px;
+  }
+  .profile-actions a { color: var(--accent); }
+  .logout-btn {
+    background: none; border: 1.5px solid var(--line); border-radius: 999px;
+    padding: 8px 18px; font: inherit; font-size: 14px; color: var(--ink-soft); cursor: pointer;
+  }
+  .logout-btn:hover { border-color: var(--bad); color: var(--bad); }
 </style>
 {% block extra_head %}{% endblock %}
 </head>
@@ -28,6 +70,11 @@
       <a href="{% url 'letters_game' %}">Буквы</a>
       <a href="{% url 'dictionary' %}">Словарь</a>
       <a class="topnav-course" href="{% url 'course' %}">← К курсу</a>
+      {% if user.is_authenticated %}
+        <a class="topnav-account" href="{% url 'profile' %}">👤 {{ user.username }}</a>
+      {% else %}
+        <a class="topnav-account" href="{% url 'login' %}">Войти</a>
+      {% endif %}
     </div>
   </div>
 </nav>

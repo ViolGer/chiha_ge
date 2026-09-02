@@ -21,6 +21,7 @@
 from pathlib import Path
 
 from django.http import HttpResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 COURSE_FILE = Path(__file__).resolve().parent / "site" / "georgian_trail.html"
 
@@ -29,6 +30,9 @@ TRAINER_URL = "/trener/"
 
 # Словарь со всеми словами и разговорником
 DICTIONARY_URL = "/slovar/"
+
+# Личный кабинет
+ACCOUNT_URL = "/kabinet/"
 
 # Ссылка на Telegram-бота. Впиши сюда адрес вида "https://t.me/имя_бота" —
 # и на курсе появится кнопка «Бот в Telegram» (в меню и в подвале страницы).
@@ -58,7 +62,9 @@ DOC_BOTTOM = """
 NAV_ANCHOR = '<div class="topnav-links" id="topnavLinks">'
 NAV_PATCH = NAV_ANCHOR + (
     '\n      <a class="topnav-trainer" href="%s">\U0001F3AE Тренажёр слов</a>'
-    '\n      <a class="topnav-dict" href="%s">\U0001F4D6 Словарь</a>' % (TRAINER_URL, DICTIONARY_URL)
+    '\n      <a class="topnav-dict" href="%s">\U0001F4D6 Словарь</a>'
+    '\n      <a class="topnav-account" href="%s">\U0001F464 Кабинет</a>'
+    % (TRAINER_URL, DICTIONARY_URL, ACCOUNT_URL)
 ) + (
     '\n      <a class="topnav-bot" href="%s" target="_blank" rel="noopener">'
     '\U0001F916 Бот в Telegram</a>' % BOT_URL if BOT_URL else ""
@@ -131,6 +137,8 @@ BOTTOM_STYLES = """
   .bot-cta b { color: var(--accent); }
   .bot-cta span { display: block; color: var(--ink-soft); font-size: 14px; margin-top: 4px; }
   .spk-playing { opacity: .55; }
+  .topnav-links a.topnav-account { color: var(--ink-soft); }
+  .topnav-links a.topnav-account:hover { color: var(--ink); }
 </style>
 """
 
@@ -297,7 +305,64 @@ AUDIO_SCRIPT = """
 </script>
 """
 
-FLOATING_BUTTON = BOTTOM_STYLES + FAB_HTML + ACCORDION_SCRIPT + AUDIO_SCRIPT
+
+SYNC_SCRIPT = """
+<script>
+(function () {
+  // Прогресс на тропе без аккаунта живёт только в этом браузере. Если человек
+  // вошёл в кабинет, те же отметки хранятся на сервере — тогда они одинаковы
+  // и на телефоне, и на ноутбуке.
+  var KEY = "%s";
+  var RELOAD_FLAG = "georgian_trail_progress_synced";
+
+  function localData() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function same(a, b) {
+    try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return false; }
+  }
+  function csrf() {
+    var m = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+
+  // Сохранение: страница вызывает это сама, когда ставишь галочку
+  window.__saveCourseProgress = function (data) {
+    fetch("/api/progress-kursa/sohranit/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrf() },
+      body: JSON.stringify({ data: data })
+    }).catch(function () { /* нет сети или не вошёл — остаётся локальная копия */ });
+  };
+
+  fetch("/api/progress-kursa/")
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (!res || !res.authenticated) return;      // гость — всё как было
+      var mine = localData();
+      var server = res.data || {};
+      var serverHas = Object.keys(server).length;
+
+      if (!serverHas) {
+        // Первый вход: поднимаем на сервер то, что уже накопилось в браузере
+        if (Object.keys(mine).length) window.__saveCourseProgress(mine);
+        return;
+      }
+      if (same(mine, server)) return;
+
+      // На сервере другая картина — она главнее. Записываем её в браузер
+      // и один раз перерисовываем страницу, чтобы галочки встали по местам.
+      try { localStorage.setItem(KEY, JSON.stringify(server)); } catch (e) { return; }
+      if (sessionStorage.getItem(RELOAD_FLAG)) return;   // защита от петли
+      try { sessionStorage.setItem(RELOAD_FLAG, "1"); } catch (e) {}
+      location.reload();
+    })
+    .catch(function () { /* сервер не ответил — работаем локально */ });
+})();
+</script>
+""" % STORAGE_KEY
+
+FLOATING_BUTTON = BOTTOM_STYLES + FAB_HTML + ACCORDION_SCRIPT + AUDIO_SCRIPT + SYNC_SCRIPT
 
 # Блок со ссылкой на бота ставим перед подвалом страницы, а не в самый низ
 FOOTER_ANCHOR = "<footer>"
@@ -319,6 +384,7 @@ SAVE_PATCH = """  function doSave() {
     } catch (e) {
       saveState = "local";
     }
+    if (window.__saveCourseProgress) window.__saveCourseProgress(PROGRESS);
     renderProgressSummary();
     return;
 """ % STORAGE_KEY
@@ -354,6 +420,7 @@ def build_course_page():
 _cached_page = None
 
 
+@ensure_csrf_cookie
 def course_page(request):
     global _cached_page
     if _cached_page is None:

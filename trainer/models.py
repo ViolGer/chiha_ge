@@ -1,9 +1,8 @@
+from django.conf import settings
 from django.db import models
 
 
 class Word(models.Model):
-    """One entry from the ~2000-word Georgian vocabulary database."""
-
     ka = models.CharField("Грузинское слово", max_length=200, unique=True)
     transcription = models.CharField("Транскрипция", max_length=200)
     ru = models.CharField("Перевод", max_length=300)
@@ -19,8 +18,6 @@ class Word(models.Model):
 
 
 class Sentence(models.Model):
-    """A short A1-A2 practice sentence used by the sentence-builder game."""
-
     ka = models.CharField("Грузинское предложение", max_length=300)
     ru = models.CharField("Перевод", max_length=300)
     transcription = models.CharField("Транскрипция", max_length=300)
@@ -29,16 +26,37 @@ class Sentence(models.Model):
         return self.ka
 
 
-class GameResult(models.Model):
-    """One completed round of a game, tied to a browser session (no login needed)."""
+class CourseProgress(models.Model):
+    """Отметки «пройдено» на тропе курса.
 
+    Без аккаунта они лежат в localStorage браузера и теряются при смене
+    устройства. Для вошедшего пользователя тот же набор отметок хранится
+    здесь, и страница курса синхронизируется с сервером.
+    """
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="course_progress"
+    )
+    data = models.JSONField("Отметки на тропе", default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user}: {sum(1 for v in self.data.values() if v)} тем"
+
+
+class GameResult(models.Model):
     GAME_CHOICES = [
         ("sentence", "Составь предложение"),
         ("pairs", "Пары слов"),
         ("flashcard", "Карточки"),
         ("letters", "Буквы"),
     ]
-
+    # Пока человек не вошёл, результат привязан к сессии браузера. После
+    # входа результаты этой сессии переносятся на аккаунт (см. accounts.py).
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        null=True, blank=True, related_name="game_results",
+    )
     session_key = models.CharField(max_length=40, db_index=True)
     game_type = models.CharField(max_length=20, choices=GAME_CHOICES)
     score = models.PositiveIntegerField(default=0)
@@ -47,6 +65,3 @@ class GameResult(models.Model):
 
     class Meta:
         ordering = ["-played_at"]
-
-    def __str__(self):
-        return f"{self.get_game_type_display()}: {self.score}/{self.max_score}"

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import accounts, views
 from .course import course_page
 
 urlpatterns = [
@@ -12,6 +12,14 @@ urlpatterns = [
     path("igra/pary/", views.pairs_game, name="pairs_game"),
     path("igra/kartochki/", views.flashcard_game, name="flashcard_game"),
     path("igra/bukvy/", views.letters_game, name="letters_game"),
+    # Личный кабинет
+    path("kabinet/", accounts.profile, name="profile"),
+    path("vhod/", accounts.login_view, name="login"),
+    path("registraciya/", accounts.signup, name="signup"),
+    path("vyhod/", accounts.logout_view, name="logout"),
+    path("api/progress-kursa/", accounts.api_course_progress, name="api_course_progress"),
+    path("api/progress-kursa/sohranit/", accounts.api_save_course_progress,
+         name="api_save_course_progress"),
     # Словарь и разговорник
     path("slovar/", views.dictionary, name="dictionary"),
     path("api/slovar/", views.api_dictionary, name="api_dictionary"),
